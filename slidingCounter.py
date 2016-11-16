@@ -1,4 +1,5 @@
 import datetime as dt
+import bisect
 
 
 class Event():
@@ -13,56 +14,50 @@ class Event():
 
 class Slider():
 
-	def __init__(self, w, l=32):
-		self.window=w       #time-window in minutes
+	def __init__(self, w):
+		self.window=w       #time-window in seconds
 		self.vector=[] 		# dt.time_at_timestamp(0)
 
 
-	def findIndex(self,window,timeNow):
-		#Implement BFS
+	def findIndex(self,window, timeNow):
+		num=timeNow-dt.timedelta(seconds=window)
+		i=bisect.bisect_left(self.vector, num)
+		return i
 
-		for i,j in enumerate(self.vector):
-			diff=(timeNow-j.time).total_seconds()
-			if(diff<=window):
-				return i
-		return len(self.vector)
-
-
-
-	def increment(self, event):
+	def increment(self, timeStamp=None): 	  
+		if not timeStamp: 					#check for correct datatype
+			timeStamp=dt.datetime.now()
 		if(len(self.vector)!=0):
-			i=self.findIndex(self.window, event.time)
+			i=self.findIndex(self.window, timeStamp)
 			self.vector[:]=self.vector[i:]	
-			self.vector.append(event)
+			self.vector.append(timeStamp)
 		else:
-			self.vector.append(event)
+			self.vector.append(timeStamp)
 
 		return None
 
 
 	def getStats(self, window, timeNow):
-
-
-		#think about removing this function
-			
+		if not timeNow: 					#check for correct datatype
+			timeNow=dt.datetime.now()	
 		i=self.findIndex(window, timeNow)
 		return len(self.vector[i:])
 
 
-	def numLastSecond(self):
-		timeNow=dt.datetime.now()
+	def numLastSecond(self,timeNow=None):
 		win=1
 		value=self.getStats(win, timeNow)
 		return value
 
-	def numLastMinute(self):
-		timeNow=dt.datetime.now()
+	def numLastMinute(self, timeNow=None):
 		win=60
 		value=self.getStats(win, timeNow)
 		return value
 
-	def numLastHour(self):
-		timeNow=dt.datetime.now()
+	def numLastHour(self, timeNow=None):
 		win=3600
 		value=self.getStats(win, timeNow)
 		return value
+
+	def clearList(self):
+		self.vector[:]=[]
